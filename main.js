@@ -1,13 +1,30 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow, Tray, Menu, shell, nativeImage} = require('electron')
+const { ipcMain } = require('electron/main')
 const path = require('path')
+
+let mainWindow = null
+let tray = null
+
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+}
+else {
+  app.on('second-instance', () => {})
+}
 
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    show : false,
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule : true,
       preload: path.join(__dirname, 'preload.js')
     }
   })
@@ -23,6 +40,38 @@ function createWindow () {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+
+  tray = new Tray(__dirname + '/src/build.ico')
+  let contextMenu = Menu.buildFromTemplate([
+    { label: 'ZeratorLive', enabled : false, icon : nativeImage.createFromPath(__dirname + '/src/build.ico').resize({width:16})},
+    { type:'separator'},
+    { label: 'Boutique', type: 'normal', click: () => shell.openExternal('https://boutiquezerator.com/') },
+    { label: 'Twitch', type: 'normal', click: () => shell.openExternal('https://www.twitch.tv/zerator') },
+    { label: 'Twitter', type: 'normal', click: () => shell.openExternal('https://twitter.com/ZeratoR') },
+    { label: 'Youtube', type: 'normal', click: () => shell.openExternal('https://www.youtube.com/user/ZeratoRSC2') },
+    { type:'separator'},
+    { label: 'Quitter', type: 'normal', click: () => app.quit() }
+  ])
+  tray.setToolTip('ZeratorLive')
+  tray.setContextMenu(contextMenu)
+  tray.addListener('double-click', () => {
+    shell.openExternal('https://www.twitch.tv/zerator')
+  })
+
+
+  ipcMain.on('game', (event, msg) => {
+    tray.setToolTip(`ZeratoR joue à ${msg}`)
+  })
+  
+  ipcMain.on('online', () => {
+    tray.setImage(__dirname + '/src/online.png')
+  })
+
+  ipcMain.on('offline', () => {
+    tray.setImage(__dirname + '/src/offline.png')
+    tray.setToolTip('ZeratoR est hors ligne')
+  })
+
   createWindow()
   
   app.on('activate', function () {
@@ -38,6 +87,8 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
+
+app.setAppUserModelId('ZeratorLive')
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
