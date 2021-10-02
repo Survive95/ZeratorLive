@@ -1,7 +1,8 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, Tray, Menu, shell, nativeImage} = require('electron')
+const {app, BrowserWindow, Tray, Menu, nativeImage} = require('electron')
 const { ipcMain } = require('electron/main')
 const path = require('path')
+const CP = require('child_process')
 
 let mainWindow = null
 let tray = null
@@ -45,17 +46,17 @@ app.whenReady().then(() => {
   let contextMenu = Menu.buildFromTemplate([
     { label: 'ZeratorLive', enabled : false, icon : nativeImage.createFromPath(__dirname + '/src/build.ico').resize({width:16})},
     { type:'separator'},
-    { label: 'Boutique', type: 'normal', click: () => shell.openExternal('https://boutiquezerator.com/') },
-    { label: 'Twitch', type: 'normal', click: () => shell.openExternal('https://www.twitch.tv/zerator') },
-    { label: 'Twitter', type: 'normal', click: () => shell.openExternal('https://twitter.com/ZeratoR') },
-    { label: 'Youtube', type: 'normal', click: () => shell.openExternal('https://www.youtube.com/user/ZeratoRSC2') },
+    { label: 'Boutique', type: 'normal', click: () => CP.execSync('start https://boutiquezerator.com/') },
+    { label: 'Twitch', type: 'normal', click: () => CP.execSync('start https://www.twitch.tv/zerator') },
+    { label: 'Twitter', type: 'normal', click: () => CP.execSync('start https://twitter.com/ZeratoR') },
+    { label: 'Youtube', type: 'normal', click: () => CP.execSync('start https://www.youtube.com/user/ZeratoRSC2') },
     { type:'separator'},
     { label: 'Quitter', type: 'normal', click: () => app.quit() }
   ])
   tray.setToolTip('ZeratorLive')
   tray.setContextMenu(contextMenu)
   tray.addListener('double-click', () => {
-    shell.openExternal('https://www.twitch.tv/zerator')
+    CP.execSync('start https://www.twitch.tv/zerator')
   })
 
 

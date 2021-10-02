@@ -1,6 +1,11 @@
-const { shell, ipcRenderer } = require("electron");
+const { ipcRenderer } = require("electron");
+const CP = require('child_process')
 
 let alreadyOn = 0
+let audio = new Audio('./src/notifications.ogg')
+
+let notifs
+
 checkStream()
 
 setInterval(function () {
@@ -33,17 +38,20 @@ function checkStream() {
                             let gameName = data.data[0].game_name
                             ipcRenderer.send('online', gameName)
 
-                            const notifs = new Notification('🔴 Zerator', {
+                            notifs = new Notification('ZeratoR', {
                                 body: `Zerator joue à ${data.data[0].game_name}`,
                                 icon: __dirname + "/src/build.ico",
-                                requireInteraction: true
+                                requireInteraction: false,
+                                silent : true,
                             })
 
-                            notifs.onclick = () => {
-                                shell.openExternal('https://www.twitch.tv/zerator')
-                            }
+                            audio.play()
 
                             alreadyOn = 1
+
+                            notifs.onclick = () => {
+                                CP.execSync('start https://www.twitch.tv/zerator')
+                            }
                         }
                     }
                 }
